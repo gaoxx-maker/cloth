@@ -1,0 +1,2 @@
+"use client"; import { useRouter } from "next/navigation"; import { FormEvent } from "react";
+export function SearchBar(){const router=useRouter(); const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const q=new FormData(e.currentTarget).get("q");if(q)router.push(`/search?q=${encodeURIComponent(String(q))}`)};return <form onSubmit={submit}><input name="q" placeholder="搜索风格、品牌、颜色"/><button>搜索</button></form>}

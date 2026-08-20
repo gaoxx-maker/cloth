@@ -1,0 +1,2 @@
+"use client";import {useEffect,useState}from "react";import {api}from "@/services/api";import {Product}from "@/types/product";
+export default function SearchPage(){const [items,setItems]=useState<Product[]>([]);useEffect(()=>{const q=new URLSearchParams(location.search).get("q");if(q)api<Product[]>(`/search?q=${encodeURIComponent(q)}`).then(setItems)},[]);return <><h1>搜索结果</h1>{items.map(p=><article key={p.id}><h2>{p.title}</h2><p>{p.brand} · ¥{p.price}</p></article>)}</>}

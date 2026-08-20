@@ -1,0 +1,1 @@
+"""Fashion Explorer application package."""

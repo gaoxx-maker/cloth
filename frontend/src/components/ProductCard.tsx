@@ -1,0 +1,2 @@
+import Link from "next/link"; import { RecommendedProduct } from "@/types/recommendation";
+export function ProductCard({product,children}:{product:RecommendedProduct;children?:React.ReactNode}) { return <article><h2>{product.title}</h2><p>{product.style_tags.join(" · ")}</p><p>{product.color} / {product.fit} · ¥{product.price}</p><p>{product.description}</p><small>为什么推荐：{product.recommendation.reason.join("；")}</small><p><Link href={`/product/${product.id}`}>查看详情</Link></p>{children}</article>; }
