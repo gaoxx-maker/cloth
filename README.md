@@ -1,4 +1,4 @@
-# Fashion Explorer MVP
+# Fashion Explorer MVP v0.2
 
 探索型服装推荐的可运行工程骨架：FastAPI + SQLAlchemy/Alembic + PostgreSQL + Next.js。它使用文字商品卡片和 5000 条可再生模拟数据，验证“保留审美相关性的新奇推荐”是否提高探索行为。
 

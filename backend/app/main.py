@@ -6,7 +6,7 @@ from app.config import get_settings
 
 settings = get_settings()
 
-app = FastAPI(title="Fashion Explorer API", version="0.1.0")
+app = FastAPI(title="Fashion Explorer API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
