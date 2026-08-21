@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/services/api";
+import { BackButton } from "@/components/BackButton";
 
 interface ExperimentStats {
   events: Record<string, number>;
@@ -43,6 +44,7 @@ export default function ExperimentPage() {
 
   return (
     <>
+      <BackButton />
       <h1>实验数据</h1>
       <article>
         <h2>核心指标</h2>

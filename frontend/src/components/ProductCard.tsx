@@ -1,2 +1,62 @@
-import Link from "next/link"; import { RecommendedProduct } from "@/types/recommendation";
-export function ProductCard({product,children}:{product:RecommendedProduct;children?:React.ReactNode}) { return <article><h2>{product.title}</h2><p>{product.style_tags.join(" · ")}</p><p>{product.color} / {product.fit} · ¥{product.price}</p><p>{product.description}</p><small>为什么推荐：{product.recommendation.reason.join("；")}</small><p><Link href={`/product/${product.id}`}>查看详情</Link></p>{children}</article>; }
+"use client";
+
+import type { KeyboardEvent } from "react";
+import { useRouter } from "next/navigation";
+
+import { Product } from "@/types/product";
+import { RecommendedProduct } from "@/types/recommendation";
+
+type CardProduct = Product | RecommendedProduct;
+
+function hasRecommendation(product: CardProduct): product is RecommendedProduct {
+  return "recommendation" in product;
+}
+
+export function ProductCard<T extends CardProduct>({
+  product,
+  onLike,
+  href,
+  liked = false,
+}: {
+  product: T;
+  onLike?: (product: T) => void;
+  href?: string;
+  liked?: boolean;
+}) {
+  const router = useRouter();
+  const activate = () => href ? router.push(href) : onLike?.(product);
+  const activateFromKeyboard = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
+    }
+  };
+
+  return (
+    <article
+      className={`product-card${onLike || href ? " product-card--clickable" : ""}${liked ? " product-card--liked" : ""}`}
+      onClick={activate}
+      onKeyDown={activateFromKeyboard}
+      role={href ? "link" : onLike ? "button" : undefined}
+      tabIndex={onLike || href ? 0 : undefined}
+      aria-label={href ? `查看 ${product.title} 的详情` : onLike ? `喜欢 ${product.title}` : undefined}
+    >
+      <div className="product-pattern" style={product.image_url ? { backgroundImage: `url(${product.image_url})` } : undefined}>
+        {!product.image_url && <span className="product-pattern__swatch" aria-hidden="true" />}
+        <p className="product-pattern__description">{product.description}</p>
+      </div>
+      <div className="product-card__body">
+        <div className="product-card__heading">
+          <h2>{product.title}</h2>
+          {liked && <span className="product-card__liked">已喜欢</span>}
+        </div>
+        <p className="product-card__meta">{product.brand} · {product.category}</p>
+        <p className="product-card__price">¥{product.price}</p>
+        <p className="product-card__tags">{product.style_tags.join(" · ")}</p>
+        {hasRecommendation(product) && (
+          <p className="product-card__reason">推荐理由：{product.recommendation.reason.join("、")}</p>
+        )}
+      </div>
+    </article>
+  );
+}

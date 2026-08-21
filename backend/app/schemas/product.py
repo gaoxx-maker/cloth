@@ -18,3 +18,17 @@ class ProductRead(BaseModel):
     novelty_score: float
     quality_score: float
     image_url: str | None = None
+    product_url: str | None = None
+
+
+class ProductOfferRead(BaseModel):
+    id: int
+    platform: str
+    platform_code: str
+    price: float
+    original_price: float | None = None
+    product_url: str | None = None
+
+
+class ProductDetailRead(ProductRead):
+    offers: list[ProductOfferRead] = Field(default_factory=list)
