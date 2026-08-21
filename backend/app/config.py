@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 项目根目录（backend/app/config.py 向上两级），.env 一律按此绝对路径解析，
@@ -28,6 +29,14 @@ class Settings(BaseSettings):
     jd_search_ratio_percent: int = 10
     jd_max_products_per_search: int = 2
     jd_min_request_interval_seconds: int = 60
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_postgres_url(cls, value: str) -> str:
+        """Render supplies postgresql://; SQLAlchemy here uses psycopg v3."""
+        if isinstance(value, str) and value.startswith("postgresql://"):
+            return "postgresql+psycopg://" + value.removeprefix("postgresql://")
+        return value
 
 
 # 推荐总分各分量的基础权重（实验参数）。探索度会在此基础上插值调整 interest/novelty/random。
