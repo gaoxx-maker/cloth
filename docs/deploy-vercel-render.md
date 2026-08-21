@@ -16,7 +16,7 @@
 
 4. 等待部署完成，打开 `https://<render-service>.onrender.com/health`，应返回 `status: ok`。
 
-Blueprint 会自动安装依赖、运行 Alembic、生成 5,400 条三商户模拟报价并启动 API。Render 的数据库连接串会自动注入，应用会把其 `postgresql://` 格式转换为 psycopg v3 所需的 SQLAlchemy URL。
+Blueprint 会自动安装依赖。为兼容 Render 免费层（不支持 `preDeployCommand`），服务每次启动时会依次运行 Alembic、生成/检查 5,400 条三商户模拟报价、导入缺失数据，然后启动 API。已存在商品时导入脚本会跳过写入。Render 的数据库连接串会自动注入，应用会把其 `postgresql://` 格式转换为 psycopg v3 所需的 SQLAlchemy URL。
 
 ## 2. 部署前端到 Vercel
 
