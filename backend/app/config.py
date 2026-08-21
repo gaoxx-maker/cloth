@@ -1,4 +1,5 @@
 from functools import lru_cache
+import json
 from pathlib import Path
 
 from pydantic import field_validator
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     recommendation_algorithm: str = "rule_v1"
     default_exploration_level: int = 50
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: str = "http://localhost:3000"
     # 京东来源只作为虚拟商品库的低频补充。密钥和地址均只从环境变量读取。
     jd_enabled: bool = False
     jd_api_key: str = ""
@@ -37,6 +38,19 @@ class Settings(BaseSettings):
         if isinstance(value, str) and value.startswith("postgresql://"):
             return "postgresql+psycopg://" + value.removeprefix("postgresql://")
         return value
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """Accept JSON arrays from local config and plain/comma-separated Render values."""
+        raw = self.cors_origins.strip()
+        if raw.startswith("["):
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, list) and all(isinstance(origin, str) for origin in parsed):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+        return [origin.strip() for origin in raw.split(",") if origin.strip()]
 
 
 # 推荐总分各分量的基础权重（实验参数）。探索度会在此基础上插值调整 interest/novelty/random。
