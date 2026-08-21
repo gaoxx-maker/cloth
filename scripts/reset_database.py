@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app.config import get_settings
 from app.database import Base, SessionLocal
+import app.models  # noqa: F401 - register all ORM tables before clearing them
 
 # 按外键依赖顺序排列，避免清空时触发约束冲突。
 TABLES = [

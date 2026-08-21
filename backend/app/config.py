@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     recommendation_algorithm: str = "rule_v1"
     default_exploration_level: int = 50
     cors_origins: list[str] = ["http://localhost:3000"]
+    # 京东来源只作为虚拟商品库的低频补充。密钥和地址均只从环境变量读取。
+    jd_enabled: bool = False
+    jd_api_key: str = ""
+    jd_api_url: str = ""
+    jd_api_key_param: str = "api_key"
+    jd_query_param: str = "q"
+    jd_search_ratio_percent: int = 10
+    jd_max_products_per_search: int = 2
+    jd_min_request_interval_seconds: int = 60
 
 
 # 推荐总分各分量的基础权重（实验参数）。探索度会在此基础上插值调整 interest/novelty/random。

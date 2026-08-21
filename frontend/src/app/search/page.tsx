@@ -1,2 +1,17 @@
-"use client";import {useEffect,useState}from "react";import {api}from "@/services/api";import {Product}from "@/types/product";
-export default function SearchPage(){const [items,setItems]=useState<Product[]>([]);useEffect(()=>{const q=new URLSearchParams(location.search).get("q");if(q)api<Product[]>(`/search?q=${encodeURIComponent(q)}`).then(setItems)},[]);return <><h1>搜索结果</h1>{items.map(p=><article key={p.id}><h2>{p.title}</h2><p>{p.brand} · ¥{p.price}</p></article>)}</>}
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { BackButton } from "@/components/BackButton";
+import { ProductFeed } from "@/components/ProductFeed";
+import { api } from "@/services/api";
+import { Product } from "@/types/product";
+
+export default function SearchPage() {
+  const [items, setItems] = useState<Product[]>([]);
+  useEffect(() => {
+    const query = new URLSearchParams(location.search).get("q");
+    if (query) api<Product[]>(`/search?q=${encodeURIComponent(query)}`).then(setItems).catch(console.error);
+  }, []);
+  return <><BackButton /><h1>搜索结果</h1><p className="feed-hint">点击商品卡片查看不同模拟商户的报价</p><ProductFeed items={items} hrefForProduct={(product) => `/product/${product.id}`} /></>;
+}
