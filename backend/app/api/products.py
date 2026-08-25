@@ -11,6 +11,9 @@ def get_merchant_product(platform_code:str,catalog_id:str,db:Session=Depends(get
     product=ProductService(db).get_merchant_product(platform_code,catalog_id)
     if not product: raise HTTPException(404,"Merchant product not found")
     return product
+@router.get("/{product_id}/similar",response_model=list[ProductRead])
+def get_similar_products(product_id:int,limit:int=6,db:Session=Depends(get_db)):
+    return ProductService(db).similar_products(product_id, min(max(limit, 1), 12))
 @router.get("/{product_id}",response_model=ProductDetailRead)
 def get_product(product_id:int,db:Session=Depends(get_db)):
     product=ProductService(db).get_product_detail(product_id)

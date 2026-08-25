@@ -3,13 +3,11 @@ import { FeedResponse, RecommendedProduct } from "@/types/recommendation";
 
 export const getFeed = (
   userId: string,
-  exploration: number,
   mode = "balanced",
   sessionId?: string,
 ) => {
   const params = new URLSearchParams({
     user_id: userId,
-    exploration_level: String(exploration),
     mode,
   });
   if (sessionId) params.set("session_id", sessionId);

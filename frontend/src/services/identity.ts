@@ -14,3 +14,6 @@ export function getOrCreateId(key: string): string {
 
 export const getUserId = () => getOrCreateId("fashion-user-id");
 export const getSessionId = () => getOrCreateId("fashion-session-id");
+export const getAccessToken = () => typeof window === "undefined" ? null : localStorage.getItem("fashion-access-token");
+export const setAccessToken = (token: string) => localStorage.setItem("fashion-access-token", token);
+export const clearAccessToken = () => localStorage.removeItem("fashion-access-token");

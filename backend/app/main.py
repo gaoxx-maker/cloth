@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import behaviors, experiments, products, recommendations, search, users
+from app.api import admin, auth, behaviors, experiments, products, recommendations, search, users
 from app.config import get_settings
 
 settings = get_settings()
@@ -17,6 +17,8 @@ app.add_middleware(
 )
 
 for router in (
+    auth.router,
+    admin.router,
     products.router,
     recommendations.router,
     behaviors.router,

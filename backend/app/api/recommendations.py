@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_optional_current_account
+from app.models.account import Account
 from app.schemas.recommendation import FeedResponse, RecommendedProduct, ReplaceRequest
 from app.services.recommendation_service import RecommendationService
 
@@ -10,21 +11,24 @@ router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
 @router.get("/feed", response_model=FeedResponse)
 def feed(
-    user_id: str,
-    exploration_level: int = 50,
+    user_id: str | None = None,
     limit: int = 20,
-    mode: str = Query("balanced", pattern="^(baseline|balanced|explore)$"),
+    mode: str = Query("balanced", pattern="^(traditional|balanced|explore)$"),
     session_id: str | None = None,
+    account: Account | None = Depends(get_optional_current_account),
     db: Session = Depends(get_db),
 ):
     service = RecommendationService(db)
-    result = service.feed(user_id, max(0, min(100, exploration_level)), min(limit, 50), mode, session_id)
+    resolved_user_id = account.id if account else user_id
+    if not resolved_user_id: raise HTTPException(400, "user_id is required for anonymous visitors")
+    result = service.feed(resolved_user_id, 50, min(limit, 50), mode, session_id)
     return {
         "items": result["items"],
         "meta": {
             "exploration_level": result["level"],
             "algorithm": "rule_v1",
             "mode": mode,
+            "season": result["season"],
         },
     }
 

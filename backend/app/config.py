@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     recommendation_algorithm: str = "rule_v1"
     default_exploration_level: int = 50
     cors_origins: str = "http://localhost:3000"
+    auth_secret_key: str = "development-only-change-me"
+    auth_access_token_minutes: int = 480
+    bootstrap_admin_email: str = ""
+    bootstrap_admin_code: str = ""
     # 京东来源只作为虚拟商品库的低频补充。密钥和地址均只从环境变量读取。
     jd_enabled: bool = False
     jd_api_key: str = ""
@@ -70,9 +74,24 @@ EXPLORATION_INTERP = {
     "random": (0.05, 0.20),
 }
 
+# 新用户在收集到足够喜欢之前，画像每次只吸收很小的一部分反馈。
+# 100 件不同的喜欢商品后才视为成熟画像；成熟后仍保留较小学习率，避免偏好剧烈跳变。
+PROFILE_MATURITY_LIKES = 100
+COLD_START_LEARNING_RATE = 1 / PROFILE_MATURITY_LIKES
+MATURE_PROFILE_LEARNING_RATE = 0.02
+
+# 详情页停留时长会折算为兴趣信号：停留 30 秒达到一次完整详情浏览信号，
+# 更短的浏览按比例计入，最长不超过喜欢行为的强度。
+DETAIL_DWELL_FULL_SIGNAL_SECONDS = 30
+DETAIL_DWELL_MAX_WEIGHT = 3
+
+# 当季（以及 All Season）商品在最终排序中占 15%，其余信号仍保留，避免变成硬过滤。
+SEASONALITY_WEIGHT = 0.15
+
 # 行为事件对兴趣画像的权重增量（原始幅度）。写入前会归一化并裁剪到 [-1, 1]。
 BEHAVIOR_WEIGHTS = {
     "like": 3,
+    "unlike": -3,
     "favorite": 4,
     "open_detail": 1,
     "view": 0.5,
