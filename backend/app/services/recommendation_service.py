@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.config import STYLE_ADJACENCY
 from app.models.recommendation import RecommendationLog
 from app.recommendation.engine import RuleRecommendationEngine
@@ -6,8 +8,20 @@ from app.repositories.behavior_repository import BehaviorRepository
 from app.repositories.product_repository import ProductRepository
 from app.services.preference_service import PreferenceService
 
-# 模式到探索度的映射：baseline 几乎只看兴趣，explore 明显提高新颖度与随机性。
-MODE_TO_LEVEL = {"baseline": 0, "balanced": None, "explore": 100}
+# 首页只保留三档模式，不再暴露“精准—探索”的连续调节。
+MODE_TO_LEVEL = {"traditional": 25, "balanced": 50, "explore": 85}
+
+
+def current_season(now: datetime | None = None) -> str:
+    """按照服务器系统时间确定季节；北半球 3–5 春、6–8 夏、9–11 秋、12–2 冬。"""
+    month = (now or datetime.now()).month
+    if month in (3, 4, 5):
+        return "Spring"
+    if month in (6, 7, 8):
+        return "Summer"
+    if month in (9, 10, 11):
+        return "Autumn"
+    return "Winter"
 
 
 class RecommendationService:
@@ -18,7 +32,7 @@ class RecommendationService:
         self.preferences = PreferenceService(db)
 
     @staticmethod
-    def _serialize(product, score, exploration_level, preference):
+    def _serialize(product, score, exploration_level, current_season, preference):
         """把 Product + 分数转换为与前端 RecommendedProduct 一致的字典，避免把 ORM 内部字段泄露到 API。"""
         return {
             "id": product.id,
@@ -39,14 +53,15 @@ class RecommendationService:
                 "score": score["score"],
                 "interest_score": score["interest_score"],
                 "novelty_score": score["novelty_score"],
-                "reason": reasons(product, score["interest_score"], exploration_level, preference),
+                "reason": reasons(product, score["interest_score"], exploration_level, current_season, preference),
             },
         }
 
-    def _rank(self, user_id, candidates, exploration_level, limit):
+    def _rank(self, user_id, candidates, exploration_level, limit, season=None):
         pref = self.preferences.get(user_id)
-        rows = RuleRecommendationEngine(pref).recommend(user_id, candidates, exploration_level, limit)
-        return [self._serialize(p, s, exploration_level, pref) for p, s in rows]
+        season = season or current_season()
+        rows = RuleRecommendationEngine(pref).recommend(user_id, candidates, exploration_level, limit, season)
+        return [self._serialize(p, s, exploration_level, season, pref) for p, s in rows]
 
     def _record_behavior(self, user_id, product, event_type, session_id=None, metadata=None):
         """记录行为并同步更新兴趣画像。"""
@@ -61,11 +76,10 @@ class RecommendationService:
 
     def feed(self, user_id, exploration_level, limit, mode="balanced", session_id=None):
         """返回一页推荐，并写入推荐日志 + 首屏 impression 行为。"""
-        level = MODE_TO_LEVEL.get(mode, exploration_level)
-        if level is None:
-            level = exploration_level
+        level = MODE_TO_LEVEL[mode]
 
-        items = self._rank(user_id, self.products.candidates(), level, limit)
+        season = current_season()
+        items = self._rank(user_id, self.products.candidates(), level, limit, season)
 
         # 推荐日志：用于实验统计（探索度调节率、模式对比）。
         self.db.add(
@@ -87,7 +101,7 @@ class RecommendationService:
                 metadata_={"mode": mode, "exploration_level": level},
             )
         self.db.commit()
-        return {"items": items, "level": level}
+        return {"items": items, "level": level, "season": season}
 
     def replace(self, user_id, product_id, direction, exploration_level, session_id=None):
         """按方向返回一件替换商品，并记录一次 replace 行为。

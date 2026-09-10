@@ -1,6 +1,6 @@
 "use client";
 
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { Product } from "@/types/product";
@@ -15,11 +15,13 @@ function hasRecommendation(product: CardProduct): product is RecommendedProduct 
 export function ProductCard<T extends CardProduct>({
   product,
   onLike,
+  onUnlike,
   href,
   liked = false,
 }: {
   product: T;
   onLike?: (product: T) => void;
+  onUnlike?: (product: T) => void;
   href?: string;
   liked?: boolean;
 }) {
@@ -30,6 +32,11 @@ export function ProductCard<T extends CardProduct>({
       event.preventDefault();
       activate();
     }
+  };
+  const likeFromPreview = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (liked) onUnlike?.(product);
+    else onLike?.(product);
   };
 
   return (
@@ -55,6 +62,18 @@ export function ProductCard<T extends CardProduct>({
         <p className="product-card__tags">{product.style_tags.join(" · ")}</p>
         {hasRecommendation(product) && (
           <p className="product-card__reason">推荐理由：{product.recommendation.reason.join("、")}</p>
+        )}
+        {(onLike || onUnlike) && (
+          <button
+            className="product-card__like-button"
+            type="button"
+            onClick={likeFromPreview}
+            onKeyDown={(event) => event.stopPropagation()}
+            disabled={liked ? !onUnlike : !onLike}
+            aria-label={`${liked ? "取消喜欢" : "喜欢"} ${product.title}`}
+          >
+            {liked ? "取消喜欢" : "♡ 喜欢"}
+          </button>
         )}
       </div>
     </article>
