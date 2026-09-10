@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import behaviors, experiments, products, recommendations, search, users
+from app.api import admin, auth, behaviors, experiments, products, recommendations, search, users
 from app.config import get_settings
 
 settings = get_settings()
@@ -10,13 +10,15 @@ app = FastAPI(title="Fashion Explorer API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 for router in (
+    auth.router,
+    admin.router,
     products.router,
     recommendations.router,
     behaviors.router,

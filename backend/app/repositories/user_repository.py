@@ -8,6 +8,11 @@ class UserRepository:
         if not user:
             user = User(id=user_id); self.db.add(user); self.db.flush()
         return user
+    def ensure_registered_user(self, user_id: str) -> User:
+        user = self.ensure_user(user_id)
+        user.is_anonymous = False
+        self.db.flush()
+        return user
     def preference(self, user_id: str) -> UserPreference:
         self.ensure_user(user_id)
         pref = self.db.query(UserPreference).filter_by(user_id=user_id).one_or_none()

@@ -5,7 +5,7 @@
 """
 import random
 
-from app.config import EXPLORATION_INTERP, RECOMMENDATION_WEIGHTS
+from app.config import EXPLORATION_INTERP, RECOMMENDATION_WEIGHTS, SEASONALITY_WEIGHT
 
 # 兴趣画像各维度的权重：把 style/category/color/fit 的偏好匹配合成单一兴趣分。
 INTEREST_DIMENSION_WEIGHTS = {"style": 0.40, "category": 0.25, "color": 0.20, "fit": 0.15}
@@ -41,7 +41,12 @@ def _weights_for_exploration(exploration_level: int) -> dict:
     return {k: v / total for k, v in weights.items()}
 
 
-def score_product(preference, product, exploration_level: int) -> dict:
+def _season_score(product_season: str | None, current_season: str) -> float:
+    """当季和四季款为 1，其余季节为 0；由最终加权而非硬过滤处理。"""
+    return 1.0 if product_season in {current_season, "All Season"} else 0.0
+
+
+def score_product(preference, product, exploration_level: int, current_season: str) -> dict:
     """计算单个商品的子分数与总分。
 
     similarity 暂用兴趣分近似（同一风格大概率也相似），待累积会话历史后替换为
@@ -52,16 +57,19 @@ def score_product(preference, product, exploration_level: int) -> dict:
     novelty = float(product.novelty_score)
     quality = float(product.quality_score)
     random_score = random.random()
+    season = _season_score(product.season, current_season)
 
-    score = (
+    base_score = (
         weights["interest"] * interest
         + weights["similarity"] * interest
         + weights["novelty"] * novelty
         + weights["quality"] * quality
         + weights["random"] * random_score
     )
+    score = (1 - SEASONALITY_WEIGHT) * base_score + SEASONALITY_WEIGHT * season
     return {
         "score": score,
         "interest_score": interest,
         "novelty_score": novelty,
+        "season_score": season,
     }

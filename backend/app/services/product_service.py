@@ -7,6 +7,9 @@ class ProductService:
     def get_product(self, product_id): return self.products.get(product_id)
     def list_products(self, limit=20, offset=0): return self.products.list_products(limit, offset)
 
+    def similar_products(self, product_id, limit=6):
+        return self.products.search_similar(product_id, limit)
+
     def get_product_detail(self, product_id):
         product = self.products.get(product_id)
         if not product: return None
